@@ -7,7 +7,7 @@
 #include <algorithm>
 using namespace std;
 
-bool compare(record &r1, record &r2)
+bool compare(rule &r1, rule &r2)
 {
   if(r1.ipstart<=r2.ipstart)
   {
@@ -20,26 +20,27 @@ bool compare(record &r1, record &r2)
 }
 Firewall::Firewall(string path)
 {
+  // initializes the list
     ifstream fs;
     fs.open(path);
     string s;
     while(getline(fs,s))
     {
-      push_record(s);
+      push_rule(s);
     }
     sort(inboundUdp.begin(),inboundUdp.end(),compare);
     sort(inboundTcp.begin(),inboundTcp.end(),compare);
     sort(outboundUdp.begin(),outboundUdp.end(),compare);
     sort(outboundTcp.begin(),outboundTcp.end(),compare);
 }
-void Firewall::push_record(string &s)
+void Firewall::push_rule(string &s)
 {
   stringstream line(s);
   string dir="";
   string protocol="";
   string ports="";
   string ips="";
-  record r;
+  rule r;
   getline(line,dir,',');
   getline(line,protocol,',');
   getline(line,ports,',');
@@ -77,30 +78,30 @@ void Firewall::push_record(string &s)
 }
 bool Firewall::accept_packet(string dir, string protocol, int port, string ipaddress)
 {
-  if(dir=="inbound" && protocol=="udp") return binarySearch(inboundUdp,port, ipaddress );
-  if(dir=="inbound" && protocol=="tcp") return binarySearch(inboundTcp,port, ipaddress );
-  if(dir=="outbound" && protocol=="tcp") return binarySearch(outboundTcp,port, ipaddress );
-  if(dir=="outbound" && protocol=="udp") return binarySearch(outboundUdp,port, ipaddress );
+  if(dir=="inbound" && protocol=="udp") return linearsearch(inboundUdp,port, ipaddress );
+  if(dir=="inbound" && protocol=="tcp") return linearsearch(inboundTcp,port, ipaddress );
+  if(dir=="outbound" && protocol=="tcp") return linearsearch(outboundTcp,port, ipaddress );
+  if(dir=="outbound" && protocol=="udp") return linearsearch(outboundUdp,port, ipaddress );
   else return false;
 }
 
-bool Firewall::search(vector<record> &records, int port, string ipaddress)
+bool Firewall::linearsearch(vector<rule> &rules, int port, string ipaddress)
 {
-  for(auto &r: records)
+  for(auto &r: rules)
   {
     if((r.startport <= port && r.endport >=port) && (r.ipstart <= ipaddress && r.ipend >=ipaddress))
     return true;
   }
   return false;
 }
-bool Firewall::binarySearch(vector<record> &records, int port, string ipaddress)
+bool Firewall::binarySearch(vector<rule> &rules, int port, string ipaddress)
 {
   int left=0;
-  int right=records.size()-1;
+  int right=rules.size()-1;
   while(left<=right)
   {
     int mid=(left+right)/2;
-    record r=records[mid];
+    rule r=rules[mid];
     if((r.startport <= port && r.endport >=port) && (r.ipstart <= ipaddress && r.ipend >=ipaddress)) return true;
     if(ipaddress>r.ipend)
     {
@@ -115,14 +116,14 @@ bool Firewall::binarySearch(vector<record> &records, int port, string ipaddress)
 }
 void Firewall::printallowedrules()
 {
-  printrecords(inboundTcp);
-  printrecords(outboundTcp);
-  printrecords(inboundUdp);
-  printrecords(outboundTcp);
+  printrules(inboundTcp);
+  printrules(outboundTcp);
+  printrules(inboundUdp);
+  printrules(outboundTcp);
 }
-void Firewall::printrecords(vector<record> & records)
+void Firewall::printrules(vector<rule> & rules)
 {
-      for(auto &r: records)
+      for(auto &r: rules)
       {
         cout << r.startport << " "  << r.endport <<  " "  <<r.ipstart << " "  << r.ipend << endl;
       }
@@ -145,6 +146,6 @@ int main(){
   cout <<"Is packet allowed? "<< (fw.accept_packet("outbound", "udp", 624, "56.12.48.92") ?"True":"False")<< endl;
   cout <<"Is packet allowed? "<< (fw.accept_packet("outbound", "udp", 724, "57.12.48.92") ?"True":"False")<< endl;
   cout <<"Is packet allowed? "<< (fw.accept_packet("outbound", "udp", 824, "58.12.48.92") ?"True":"False")<< endl;
-  //f.printrecords();
+  //f.printrules();
   return 0;
 }
