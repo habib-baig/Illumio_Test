@@ -1,4 +1,5 @@
 using namespace std;
+// the consist of below structure
 class rule{
 public:
   int startport;
@@ -7,14 +8,13 @@ public:
   string ipend;
 };
 
-
+// Interface for the Firewall class
 class Firewall{
   private:
     vector<rule> inboundUdp;
     vector<rule> outboundUdp;
     vector<rule> outboundTcp;
     vector<rule> inboundTcp;
-
   public:
     Firewall(string path);
     void push_rule(string &s);
@@ -23,4 +23,4 @@ class Firewall{
     bool binarySearch(vector<rule> &rules, int port, string ipaddress);
     void printrules(vector<rule> &rules);
     void printallowedrules();
-    };
+};

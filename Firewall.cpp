@@ -7,12 +7,13 @@
 #include <algorithm>
 using namespace std;
 
+// Custom Sort function to start based on staring ip for each rule
 bool compare(rule &r1, rule &r2)
 {
-  if(r1.ipstart<=r2.ipstart)
-  {
+  if(r1.ipstart<r2.ipstart)
+  return true;
+  else if(r1.ipstart==r2.ipstart) // if starting ip range is same sort based on end range
     return r1.ipend<r2.ipend;
-  }
   else
   {
     return false;
@@ -20,7 +21,7 @@ bool compare(rule &r1, rule &r2)
 }
 Firewall::Firewall(string path)
 {
-  // initializes the list
+  // initializes the rules from csv
     ifstream fs;
     fs.open(path);
     string s;
@@ -44,7 +45,7 @@ void Firewall::push_rule(string &s)
   getline(line,dir,',');
   getline(line,protocol,',');
   getline(line,ports,',');
-
+  // to get the port range
   if(ports.find('-')!=string::npos){
     string p;
     stringstream ss(ports);
@@ -54,6 +55,7 @@ void Firewall::push_rule(string &s)
     r.endport=stoi(p);
   }else
   {
+    // if there is only one port put it in both start and end;
     r.startport=stoi(ports);
     r.endport=stoi(ports);
   }
@@ -66,6 +68,7 @@ void Firewall::push_rule(string &s)
     getline(ss,r.ipend,'-');
   }else
   {
+    // if there is only one Ip put it in both start and end;
     r.ipstart=ips;
     r.ipend=ips;
   }
@@ -78,6 +81,7 @@ void Firewall::push_rule(string &s)
 }
 bool Firewall::accept_packet(string dir, string protocol, int port, string ipaddress)
 {
+  //  search based on direction and protocol type
   if(dir=="inbound" && protocol=="udp") return linearsearch(inboundUdp,port, ipaddress );
   if(dir=="inbound" && protocol=="tcp") return linearsearch(inboundTcp,port, ipaddress );
   if(dir=="outbound" && protocol=="tcp") return linearsearch(outboundTcp,port, ipaddress );
@@ -87,6 +91,7 @@ bool Firewall::accept_packet(string dir, string protocol, int port, string ipadd
 
 bool Firewall::linearsearch(vector<rule> &rules, int port, string ipaddress)
 {
+  // linearly search for all the rules and if any of them satisfies return true.
   for(auto &r: rules)
   {
     if((r.startport <= port && r.endport >=port) && (r.ipstart <= ipaddress && r.ipend >=ipaddress))
@@ -98,12 +103,13 @@ bool Firewall::binarySearch(vector<rule> &rules, int port, string ipaddress)
 {
   int left=0;
   int right=rules.size()-1;
+  // Perform binarySearch based on the ipaddress
   while(left<=right)
   {
     int mid=(left+right)/2;
     rule r=rules[mid];
     if((r.startport <= port && r.endport >=port) && (r.ipstart <= ipaddress && r.ipend >=ipaddress)) return true;
-    if(ipaddress>r.ipend)
+    if(ipaddress>r.ipend) // if beyonf the range go on right
     {
       left=mid+1;
     }
@@ -132,6 +138,7 @@ void Firewall::printrules(vector<rule> & rules)
 int main(){
   string filepath="./Test.csv";
   Firewall fw(filepath);
+  cout << "Testing some scenarios" << endl;
   cout <<"Is packet allowed? " << (fw.accept_packet("inbound", "udp", 53, "192.168.2.1")?"True":"False") <<  endl;
   cout <<"Is packet allowed? "<< (fw.accept_packet("outbound", "tcp", 10234, "192.168.10.11")?"True":"False") << endl;
   cout <<"Is packet allowed? "<< (fw.accept_packet("inbound", "tcp", 81, "192.168.1.2")?"True":"False")<< endl;
