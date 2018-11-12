@@ -19,3 +19,10 @@ suppose we have 50k rules, each with average port range= 1000 and Ip range= 10,0
 then total memory requires would have been close (50,000* 1000* 10,000)= 500 GB which is highly infisible hence although this approach has O(1) time complexity. Dictionaries will consume Huge memory.
 
 Hence, I think Binary search is the most optimal way of implementing considering memory and time complexity tradeoff. Hence, In memory caching of data and binary search on it is the optimal way.
+
+Adding the Team Preference
+1. Platform Team
+2. Policy team
+3. Data team
+
+** Modified the readme file after 90 minutes because I forgot to put in team preference earlier.
